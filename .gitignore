@@ -1,0 +1,13 @@
+# Virtual environment
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local database
+instance/*.db
+
+# Temporary files
+*.log
+*.tmp

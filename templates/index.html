@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>Landing</title>
+{% endblock %}
+
+{% block body %}
+<div class="content">
+
+
+    {% if current_user.is_authenticated %}
+        <p>You are logged in as {{ current_user.username }}</p>
+        <a href="{{ url_for('logout') }}">Logout</a>
+
+        <form action="/" method="POST">
+            <input type="text" name="content" id="content">
+            <input type="submit" value="Add Event">
+        </form>
+    {% else %}
+        <form action="{{ url_for('index') }}" method="POST">
+            <label for="username">Username:</label>
+            <input type="text" name="username" required>
+            <br>
+            <label for="password">Password:</label>
+            <input type="text" name="password" required>
+            <input type="submit" value="Login">
+        </form>
+    {% endif %}
+    {% if inv_msg %}
+        <p style="color:red">Invalid username or password</p>
+    {% endif %}
+
+    <table>
+        <tr>
+            <th>Event</th>
+            <th>Description</th>
+            <th>Author</th>
+            <th>Date</th>
+        </tr>
+        {% for event in events %}
+        <tr>
+            <td>{{event.title}}</td>
+            <td>{{event.content}}</td>
+            <td>{{event.author_username}}</td>
+            <td>{{event.date_created.date()}}</td>
+
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+{% endblock %}
