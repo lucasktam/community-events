@@ -27,7 +27,7 @@ class Event(db.Model):
     title = db.Column(db.String(30), nullable=False)
     content = db.Column(db.String(500))
     location = db.Column(db.JSON)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
 
     author_username = db.Column(db.String(30), db.ForeignKey('user.username'), nullable=False)
     author = db.relationship('User', backref=db.backref('events', lazy=True))
@@ -41,34 +41,60 @@ def load_user(user_id):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+        if 'Login' in request.form:
+            username = request.form['username']
+            password = request.form['password']
 
-        # Check if any users exist
-        if User.query.count() == 0:
-            # If no users, create the first user with the submitted credentials
-            new_user = User(username=username, password=password)
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user)
-            return redirect('/')
+            # Check if any users exist
+            if User.query.count() == 0:
+                # If no users, create the first user with the submitted credentials
+                new_user = User(username=username, password=password)
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user)
+                return redirect('/')
 
 
-        user = User.query.filter_by(username=username).first()
+            user = User.query.filter_by(username=username).first()
 
-        if not user:
-            # If no user with this username exists, create a new user
-            new_user = User(username=username, password=password)
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user)
-            return redirect('/')
+            if not user:
+                # If no user with this username exists, create a new user
+                new_user = User(username=username, password=password)
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user)
+                return redirect('/')
+            
+            if user and user.password == password:  # Check if credentials match
+                login_user(user)
+                return redirect('/')
+            
+            events = Event.query.all()
+            return render_template('index.html', inv_msg=True, events=events)
         
-        if user and user.password == password:  # Check if credentials match
-            login_user(user)
-            return redirect('/')
-        return render_template('index.html', inv_msg=True)
-    
+        
+        elif 'Add Event' in request.form:
+            event_title = request.form.get('title')
+            event_content = request.form.get('content')
+
+            new_event = Event(
+                title=event_title, 
+                content=event_content, 
+                author_username=current_user.username
+            )
+            
+            try:
+                db.session.add(new_event)
+                db.session.commit()
+                return redirect('/')
+            except:
+                return 'issue adding task'
+            
+    else:  # If the request is a GET (user loads the page)
+        events = Event.query.all() 
+        return render_template('index.html', events=events)
+
+        
     return render_template('index.html', inv_msg=False)
 
 # Route to log out

@@ -11,25 +11,28 @@
     {% if current_user.is_authenticated %}
         <p>You are logged in as {{ current_user.username }}</p>
         <a href="{{ url_for('logout') }}">Logout</a>
+        <br><br>
 
         <form action="/" method="POST">
-            <input type="text" name="content" id="content">
-            <input type="submit" value="Add Event">
+            <input type="text" name="title" required>
+            <input type="text" name="content">
+            <input type="submit" name="Add Event" value="Add Event">
         </form>
+
     {% else %}
         <form action="{{ url_for('index') }}" method="POST">
             <label for="username">Username:</label>
             <input type="text" name="username" required>
             <br>
             <label for="password">Password:</label>
-            <input type="text" name="password" required>
-            <input type="submit" value="Login">
+            <input type="text" name="password">
+            <input type="submit" name="Login" value="Login">
         </form>
     {% endif %}
     {% if inv_msg %}
         <p style="color:red">Invalid username or password</p>
     {% endif %}
-
+    <br><br>
     <table>
         <tr>
             <th>Event</th>
@@ -42,8 +45,10 @@
             <td>{{event.title}}</td>
             <td>{{event.content}}</td>
             <td>{{event.author_username}}</td>
-            <td>{{event.date_created.date()}}</td>
-
+            <td>{{event.date.date()}}</td>
+            {% if current_user.username == event.author_username %}
+                <td>Your event</td>
+            {% endif %}
         </tr>
         {% endfor %}
     </table>
