@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
 {% block head %}
-<title>Landing</title>
+<title>Community Events</title>
 {% endblock %}
 
 {% block body %}
 <div class="content">
-
+    <h2>Community Events</h2>
 
     {% if current_user.is_authenticated %}
         <p>You are logged in as {{ current_user.username }}</p>
@@ -79,7 +79,9 @@
 
             <label for="duration">Duration (HH:mm):</label>
             <input type="text" name="duration" required></input>
-
+            
+            <div class="autocomplete-container" id="autocomplete-container"></div>
+            
             <br><br>
             <input type="submit" name="Add Event" value="Add Event">
 
@@ -110,6 +112,7 @@
             <th>Start Date</th>
             <th>End Date</th>
             <th>Duration</th>
+            <th>Location</th>
         </tr>
         {% for event in events %}
         <tr>
@@ -119,6 +122,7 @@
             <td>{{event.start_date}}</td>
             <td>{{event.end_date}}</td>
             <td>{{event.end_date - event.start_date}}</td>
+            <td>{{event.location}}</td>
             {% if current_user.username == event.author_username %}
                 <td>
                     <a href="/delete/{{event.id}}">Delete</a>

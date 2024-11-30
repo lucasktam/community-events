@@ -151,6 +151,7 @@ def delete(id):
 def update(id):
     event = Event.query.get_or_404(id)
     if request.method == 'POST':
+        event.title = request.form['title']
         event.content = request.form['content']
         
         try:
