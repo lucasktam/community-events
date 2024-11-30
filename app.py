@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
+
+import json
 
 # Initialize Flask app and configurations
 app = Flask(__name__)
@@ -81,6 +83,8 @@ def index():
             event_time = datetime.strptime(event_time_str, '%Y-%m-%d %H:%M:%S')
 
             event_time_end_str = request.form.get('duration')
+            
+            address_data = request.form.get('address-data')
 
             # Allowed formats: HH:mm or mm
             full_format = False
@@ -121,6 +125,20 @@ def index():
                 h = 0
                 m = int(event_time_end_str)
                 new_event.end_date = new_event.start_date + timedelta(hours = h, minutes = m)
+
+            if address_data:
+                try:
+                    # You can parse the JSON string if needed
+                    addresses_json = json.loads(address_data)
+                    first_address = addresses_json[0]
+                    formatted_address = f"{first_address.get('address_line1')}, {first_address.get('address_line2')}"
+                    
+                    # Add the formatted address to the new_event
+                    new_event.location = formatted_address
+                except Exception as e:
+                    return jsonify({"error": "Failed to process address data", "details": str(e)}), 400
+            else:
+                return 'address not received'
 
             try:
                 db.session.add(new_event)

@@ -13,7 +13,7 @@
         <a href="{{ url_for('logout') }}">Logout</a>
         <br><br>
 
-        <form action="/" method="POST">
+        <form action="/" id="eventForm" method="POST">
             <label for="title">Title:</label>
             <input type="text" name="title" required>
             <br>
@@ -81,7 +81,8 @@
             <input type="text" name="duration" required></input>
             
             <div class="autocomplete-container" id="autocomplete-container"></div>
-            
+            <!-- Hidden field to store the JSON data -->
+            <input type="hidden" id="address-data" name="address-data">
             <br><br>
             <input type="submit" name="Add Event" value="Add Event">
 

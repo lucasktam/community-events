@@ -1,3 +1,5 @@
+let currentItems = [];
+
 function addressAutocomplete(containerElement, callback, options) {
 	// create container for input element
   const inputContainerElement = document.createElement("div");
@@ -12,7 +14,7 @@ function addressAutocomplete(containerElement, callback, options) {
 
   let currentTimeout = null; 
   let currentPromiseReject = null;
-  let currentItems = [];
+
 
 
 
@@ -49,7 +51,7 @@ function addressAutocomplete(containerElement, callback, options) {
         currentPromiseReject = reject;
 
         // Get an API Key on https://myprojects.geoapify.com
-        const apiKey = "";
+        const apiKey = "5a49aacce01949aa9e1d66fc5d1f392c";
 
         var url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(currentValue)}&format=json&limit=5&apiKey=${apiKey}`;
 
@@ -193,4 +195,44 @@ addressAutocomplete(document.getElementById("autocomplete-container"), (data) =>
   console.log(data);
 }, {
 	placeholder: "Enter an address here"
+});
+
+document.getElementById("eventForm").addEventListener("submit", function(e) {
+  e.preventDefault();  // Prevent the default form submission
+
+  // Serialize the current JSON data and set it in the hidden input field
+  const addressData = JSON.stringify(currentItems);  // Assuming currentItems is the selected address array
+
+  // Set the hidden input field with the JSON data
+  document.getElementById("address-data").value = addressData;
+
+  // Prepare form data manually to ensure all fields are included
+  const formData = new FormData(this);
+  
+  // Add the 'Add Event' marker to ensure correct route handling
+  formData.append('Add Event', 'Add Event');
+
+  fetch('/', {
+      method: 'POST',
+      body: formData
+  })
+  .then(response => {
+      // Check if the response is okay (status in 200-299 range)
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+      // If the route doesn't return JSON, parse as text
+      return response.text();
+  })
+  .then(data => {
+      // Since the route redirects on success, this will likely be HTML
+      console.log("Event added successfully");
+      // Optionally, you could reload the page or update the UI
+      window.location.reload();
+  })
+  .catch(error => {
+      console.error("Error:", error);
+      // Handle error (e.g., show error message to user)
+      alert("Failed to add event. Please try again.");
+  });
 });
