@@ -109,6 +109,7 @@
             <th>Author</th>
             <th>Start Date</th>
             <th>End Date</th>
+            <th>Duration</th>
         </tr>
         {% for event in events %}
         <tr>
@@ -117,6 +118,7 @@
             <td>{{event.author_username}}</td>
             <td>{{event.start_date}}</td>
             <td>{{event.end_date}}</td>
+            <td>{{event.end_date - event.start_date}}</td>
             {% if current_user.username == event.author_username %}
                 <td>
                     <a href="/delete/{{event.id}}">Delete</a>

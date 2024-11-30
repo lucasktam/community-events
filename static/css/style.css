@@ -1,0 +1,15 @@
+body, html {
+    margin: 10;
+    font-family: sans-serif;
+}
+
+th {
+    margin: 10px;
+    
+}
+
+td {
+    padding: 10px;
+    border: 1px solid #aaa;
+}
+
