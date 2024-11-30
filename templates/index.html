@@ -14,9 +14,78 @@
         <br><br>
 
         <form action="/" method="POST">
+            <label for="title">Title:</label>
             <input type="text" name="title" required>
+            <br>
+            <label for="content">Description:</label>
             <input type="text" name="content">
+            <br><br>
+            
+            <label for="year">Year:</label>
+            <select id="year" name="year" required>
+                <option value="">Select</option>
+                <script>
+                    for (let i = new Date().getFullYear() + 10; i >= new Date().getFullYear(); i--){
+                        document.write(`<option value="${i}">${i}</option>`);
+                    }
+
+                </script>
+            </select>
+
+            <label for="month">Month:</label>
+            <select id="month" name="month" required>
+                <option value="">Select</option>
+                <script>
+                    for (let i = 0; i < 12; i++){
+                        const date = new Date(2024, i);
+                        document.write(`<option value="${i.toString().padStart(2, '0')}">${date.toLocaleString('default', { month: 'long' })}</option>`);
+                    }
+                </script>
+            </select>
+
+            <label for="day">Day:</label>
+            <select id="day" name="day" required>
+                <option value="">Select</option>
+                <script>
+                    for (let i = 0; i < 32; i++){
+                        document.write(`<option value="${i}">${i}</option>`)
+                    }
+                </script>
+            </select>
+
+            
+            <label for="time">Time:</label>
+            <select id="time" name="time" required>
+                <option value="">Select</option>
+                
+                <script>
+                    for (let i = 0; i < 24; i++) {
+                        for (let j = 0; j <= 59; j++) {
+                            const hour24 = i.toString().padStart(2, '0');
+                            const min = j.toString().padStart(2, '0');
+                            
+                            let hour12 = i % 12 || 12;
+                            const period = i < 12 ? 'AM' : 'PM';
+
+                            const value = `${hour24}:${min}`; 
+                            const display = `${hour12}:${min} ${period}`; 
+
+                            document.write(`<option value="${value}">${display}</option>`);
+                        }
+                    }
+                    
+                </script>
+            </select>
+
+            <label for="duration">Duration (HH:mm):</label>
+            <input type="text" name="duration" required></input>
+
+            <br><br>
             <input type="submit" name="Add Event" value="Add Event">
+
+            {% if wrong_format %}
+                <p style="color:red">Please use HH:mm format for duration</p>
+            {% endif %}
         </form>
 
     {% else %}
@@ -38,16 +107,22 @@
             <th>Event</th>
             <th>Description</th>
             <th>Author</th>
-            <th>Date</th>
+            <th>Start Date</th>
+            <th>End Date</th>
         </tr>
         {% for event in events %}
         <tr>
             <td>{{event.title}}</td>
             <td>{{event.content}}</td>
             <td>{{event.author_username}}</td>
-            <td>{{event.date.date()}}</td>
+            <td>{{event.start_date}}</td>
+            <td>{{event.end_date}}</td>
             {% if current_user.username == event.author_username %}
-                <td>Your event</td>
+                <td>
+                    <a href="/delete/{{event.id}}">Delete</a>
+                    <br>
+                    <a href="/update/{{event.id}}">Update</a>
+                </td>
             {% endif %}
         </tr>
         {% endfor %}

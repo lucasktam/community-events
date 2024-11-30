@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Initialize Flask app and configurations
 app = Flask(__name__)
@@ -27,8 +27,8 @@ class Event(db.Model):
     title = db.Column(db.String(30), nullable=False)
     content = db.Column(db.String(500))
     location = db.Column(db.JSON)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime, default=datetime.utcnow)
     author_username = db.Column(db.String(30), db.ForeignKey('user.username'), nullable=False)
     author = db.relationship('User', backref=db.backref('events', lazy=True))
 
@@ -72,17 +72,56 @@ def index():
             events = Event.query.all()
             return render_template('index.html', inv_msg=True, events=events)
         
-        
+
         elif 'Add Event' in request.form:
             event_title = request.form.get('title')
             event_content = request.form.get('content')
 
+            event_time_str = request.form.get('year') + '-' + request.form.get('month') + '-' + request.form.get('day') + ' ' + request.form.get('time') + ':00'
+            event_time = datetime.strptime(event_time_str, '%Y-%m-%d %H:%M:%S')
+
+            event_time_end_str = request.form.get('duration')
+
+            # Allowed formats: HH:mm or mm
+            full_format = False
+            i = 0
+            if event_time_end_str[0] == ':':
+                events = Event.query.all() 
+                return render_template('index.html', wrong_format=True, events=events)
+            while i < len(event_time_end_str) and event_time_end_str[i] != ':' :
+                if (event_time_end_str[i] < '0' or event_time_end_str[i] > '9'):
+                    events = Event.query.all() 
+                    return render_template('index.html', wrong_format=True, events=events)
+                i += 1
+            if event_time_end_str[i] == ':' and i == len(event_time_end_str) - 1:
+                events = Event.query.all() 
+                return render_template('index.html', wrong_format=True, events=events)
+            i += 1
+            
+            while i < len(event_time_end_str):
+                if (event_time_end_str[i] < '0' or event_time_end_str[i] > '9'):
+                    events = Event.query.all() 
+                    return render_template('index.html', wrong_format=True, events=events)
+                full_format = True
+                i += 1
+
+
+
             new_event = Event(
                 title=event_title, 
                 content=event_content, 
+                start_date=event_time,
                 author_username=current_user.username
             )
             
+            if (full_format):
+                h, m = map(int, event_time_end_str.split(":"))
+                new_event.end_date = new_event.start_date + timedelta(hours = h, minutes = m)
+            else:
+                h = 0
+                m = int(event_time_end_str)
+                new_event.end_date = new_event.start_date + timedelta(hours = h, minutes = m)
+
             try:
                 db.session.add(new_event)
                 db.session.commit()
@@ -96,6 +135,31 @@ def index():
 
         
     return render_template('index.html', inv_msg=False)
+
+@app.route('/delete/<int:id>')
+def delete(id):
+    event_to_delete = Event.query.get_or_404(id)
+
+    try:
+        db.session.delete(event_to_delete)
+        db.session.commit()
+        return redirect('/')
+    except:
+        return 'there was a problem deleting'
+    
+@app.route('/update/<int:id>', methods=['GET', 'POST'])
+def update(id):
+    event = Event.query.get_or_404(id)
+    if request.method == 'POST':
+        event.content = request.form['content']
+        
+        try:
+            db.session.commit()
+            return redirect('/')
+        except:
+            return 'there was a problem updating'
+    else:
+        return render_template('update.html', event=event)
 
 # Route to log out
 @app.route('/logout')
