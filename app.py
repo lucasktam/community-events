@@ -2,15 +2,21 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
-
+import time 
 import json
+import requests
+# Weather API
 
-# Initialize Flask app and configurations
+BASE_URL = "http://api.weatherapi.com/v1"
+
+WEATHER_API_KEY = ""
+
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key'  # Secret key for session management
+app.config['SECRET_KEY'] = '' 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 
-# Initialize SQLAlchemy and Flask-Login
+
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -23,7 +29,8 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.username}>'
-    
+
+# Define Event model 
 class Event(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(30), nullable=False)
@@ -31,6 +38,8 @@ class Event(db.Model):
     location = db.Column(db.JSON)
     start_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_date = db.Column(db.DateTime, default=datetime.utcnow)
+    temperature = db.Column(db.Float, default=0.0)
+    condition = db.Column(db.String(100), default='')
     author_username = db.Column(db.String(30), db.ForeignKey('user.username'), nullable=False)
     author = db.relationship('User', backref=db.backref('events', lazy=True))
 
@@ -39,7 +48,7 @@ class Event(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Route to display the home page and handle login/logout
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -79,7 +88,7 @@ def index():
             event_title = request.form.get('title')
             event_content = request.form.get('content')
 
-            event_time_str = request.form.get('year') + '-' + request.form.get('month') + '-' + request.form.get('day') + ' ' + request.form.get('time') + ':00'
+            event_time_str = request.form.get('year') + '-' + str(int(request.form.get('month')) + 1) + '-' + request.form.get('day') + ' ' + request.form.get('time') + ':00'
             event_time = datetime.strptime(event_time_str, '%Y-%m-%d %H:%M:%S')
 
             event_time_end_str = request.form.get('duration')
@@ -128,13 +137,39 @@ def index():
 
             if address_data:
                 try:
-                    # You can parse the JSON string if needed
+                    
                     addresses_json = json.loads(address_data)
                     first_address = addresses_json[0]
                     formatted_address = f"{first_address.get('address_line1')}, {first_address.get('address_line2')}"
                     
-                    # Add the formatted address to the new_event
+                    
                     new_event.location = formatted_address
+
+                    print(addresses_json[0]['lon'])
+                    print(addresses_json[0]['lat'])
+
+                    if ((event_time - datetime.utcnow()) >= timedelta(days=14) and (event_time - datetime.utcnow()) < timedelta(days=300)): # Use future
+
+                        url = f"{BASE_URL}/future.json?key={WEATHER_API_KEY}&q={addresses_json[0]['lat']},{addresses_json[0]['lon']}&dt={event_time.strftime('%Y-%m-%d')}"
+                        
+                        response = requests.get(url).json()
+
+                        
+                        new_event.temperature = response['forecast']['forecastday'][0]['hour'][event_time.hour]['temp_f']
+                        new_event.condition = response['forecast']['forecastday'][0]['hour'][event_time.hour]['condition']['text']
+                        
+
+                    elif ((event_time - datetime.utcnow()) < timedelta(days=14)):
+                        url = f"{BASE_URL}/forecast.json?key={WEATHER_API_KEY}&q={addresses_json[0]['lat']},{addresses_json[0]['lon']}&days={(event_time - datetime.utcnow()).days}"
+                        response = requests.get(url).json()
+
+                        new_event.temperature = response['forecast']['forecastday'][0]['hour'][event_time.hour]['temp_f']
+                        new_event.condition = response['forecast']['forecastday'][0]['hour'][event_time.hour]['condition']['text']
+
+                    else:
+                        new_event.condition = 'Too far in the future'
+               
+                    
                 except Exception as e:
                     return jsonify({"error": "Failed to process address data", "details": str(e)}), 400
             else:
@@ -147,7 +182,7 @@ def index():
             except:
                 return 'issue adding task'
             
-    else:  # If the request is a GET (user loads the page)
+    else:  # If the request is a GET 
         events = Event.query.all() 
         return render_template('index.html', events=events)
 

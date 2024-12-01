@@ -6,12 +6,11 @@
 
 {% block body %}
 <div class="content">
-    <h2>Community Events</h2>
+    <h1>Community Events</h1>
 
     {% if current_user.is_authenticated %}
-        <p>You are logged in as {{ current_user.username }}</p>
-        <a href="{{ url_for('logout') }}">Logout</a>
-        <br><br>
+        <p>You are logged in as {{ current_user.username }} (<a href="{{ url_for('logout') }}">Logout</a>)</p>
+        <br>
 
         <form action="/" id="eventForm" method="POST">
             <label for="title">Title:</label>
@@ -25,7 +24,7 @@
             <select id="year" name="year" required>
                 <option value="">Select</option>
                 <script>
-                    for (let i = new Date().getFullYear() + 10; i >= new Date().getFullYear(); i--){
+                    for (let i = new Date().getFullYear() + 3; i >= new Date().getFullYear(); i--){
                         document.write(`<option value="${i}">${i}</option>`);
                     }
 
@@ -47,7 +46,7 @@
             <select id="day" name="day" required>
                 <option value="">Select</option>
                 <script>
-                    for (let i = 0; i < 32; i++){
+                    for (let i = 1; i < 32; i++){
                         document.write(`<option value="${i}">${i}</option>`)
                     }
                 </script>
@@ -76,14 +75,15 @@
                     
                 </script>
             </select>
-
+            <br><br>
             <label for="duration">Duration (HH:mm):</label>
             <input type="text" name="duration" required></input>
-            
+            <br><br>
+            <p>Address:</p>
             <div class="autocomplete-container" id="autocomplete-container"></div>
             <!-- Hidden field to store the JSON data -->
             <input type="hidden" id="address-data" name="address-data">
-            <br><br>
+            <br>
             <input type="submit" name="Add Event" value="Add Event">
 
             {% if wrong_format %}
@@ -106,6 +106,7 @@
     {% endif %}
     <br><br>
     <table>
+        {% if events %}
         <tr>
             <th>Event</th>
             <th>Description</th>
@@ -114,16 +115,21 @@
             <th>End Date</th>
             <th>Duration</th>
             <th>Location</th>
+            <th>Temperature</th>
+            <th>Weather</th>
         </tr>
+        {% endif %}
         {% for event in events %}
         <tr>
-            <td>{{event.title}}</td>
-            <td>{{event.content}}</td>
+            <td class="event_title">{{event.title}}</td>
+            <td class="event_content">{{event.content}}</td>
             <td>{{event.author_username}}</td>
             <td>{{event.start_date}}</td>
             <td>{{event.end_date}}</td>
             <td>{{event.end_date - event.start_date}}</td>
             <td>{{event.location}}</td>
+            <td>{{event.temperature}} °F</td>
+            <td>{{event.condition}}</td>
             {% if current_user.username == event.author_username %}
                 <td>
                     <a href="/delete/{{event.id}}">Delete</a>

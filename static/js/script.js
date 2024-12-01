@@ -1,5 +1,5 @@
 let currentItems = [];
-
+// Functionality given by Geoapify https://www.geoapify.com/
 function addressAutocomplete(containerElement, callback, options) {
 	// create container for input element
   const inputContainerElement = document.createElement("div");
@@ -15,11 +15,8 @@ function addressAutocomplete(containerElement, callback, options) {
   let currentTimeout = null; 
   let currentPromiseReject = null;
 
-
-
-
   const MIN_ADDRESS_LENGTH = 3;
-  const DEBOUNCE_DELAY = 0;
+  const DEBOUNCE_DELAY = 100;
 
   /* Process a user input: */
   inputElement.addEventListener("input", function(e) {
@@ -51,7 +48,7 @@ function addressAutocomplete(containerElement, callback, options) {
         currentPromiseReject = reject;
 
         // Get an API Key on https://myprojects.geoapify.com
-        const apiKey = "5a49aacce01949aa9e1d66fc5d1f392c";
+        const apiKey = "";
 
         var url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(currentValue)}&format=json&limit=5&apiKey=${apiKey}`;
 
@@ -198,10 +195,10 @@ addressAutocomplete(document.getElementById("autocomplete-container"), (data) =>
 });
 
 document.getElementById("eventForm").addEventListener("submit", function(e) {
-  e.preventDefault();  // Prevent the default form submission
+  e.preventDefault();  
 
-  // Serialize the current JSON data and set it in the hidden input field
-  const addressData = JSON.stringify(currentItems);  // Assuming currentItems is the selected address array
+  
+  const addressData = JSON.stringify(currentItems); 
 
   // Set the hidden input field with the JSON data
   document.getElementById("address-data").value = addressData;
@@ -217,22 +214,22 @@ document.getElementById("eventForm").addEventListener("submit", function(e) {
       body: formData
   })
   .then(response => {
-      // Check if the response is okay (status in 200-299 range)
+      
       if (!response.ok) {
           throw new Error('Network response was not ok');
       }
-      // If the route doesn't return JSON, parse as text
+      
       return response.text();
   })
   .then(data => {
-      // Since the route redirects on success, this will likely be HTML
+      
       console.log("Event added successfully");
-      // Optionally, you could reload the page or update the UI
+      
       window.location.reload();
   })
   .catch(error => {
       console.error("Error:", error);
-      // Handle error (e.g., show error message to user)
+      
       alert("Failed to add event. Please try again.");
   });
 });

@@ -13,3 +13,5 @@ instance/*.db
 *.tmp
 
 test.py
+
+keys.txt

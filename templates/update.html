@@ -10,7 +10,9 @@
     <h1 style="text-align: center;">Update Event</h1>
 
     <form action="/update/{{event.id}}" method="POST">
+        <label for="title">Title: </label>
         <input type="text" name="title" id="title" value="{{event.title}}">
+        <label for="content">Description: </label>
         <input type="text" name="content" id="content" value="{{event.content}}">
         <input type="submit" value="Update">
     </form>
